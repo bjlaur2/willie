@@ -119,9 +119,10 @@ def f_remind(bot, trigger):
         finally:
             bot.memory['tell_lock'].release()
 
-        response = "I'll pass that on when %s is around." % tellee
+        response = "%s will be notificated." % tellee
 
-        bot.reply(response)
+#        bot.reply(response, 1)
+	bot.notice(response, Identifier(teller))
     elif Identifier(teller) == tellee:
         bot.say('You can %s yourself that.' % verb)
     else:
