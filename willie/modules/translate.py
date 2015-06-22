@@ -134,13 +134,28 @@ def tr2(bot, trigger):
     if (len(phrase) > 350) and (not trigger.admin):
         return bot.reply('Phrase must be under 350 characters.')
 
+    def ja2jp(x):
+        return "jp" if x == "ja" else x
+    def jp2ja(x):
+        return "ja" if x == "jp" else x
+    
+    
+
     src, dest = args
-    if src != dest:
+    src = jp2ja(src)
+    dest = jp2ja(dest)
+    #if src != dest:
+    if 1==1:
         msg, src = translate(phrase, src, dest)
+        if src == dest and src == "en":
+            dest = "ja"
+            msg, src = translate(phrase, src, dest)
         if sys.version_info.major < 3 and isinstance(msg, str):
             msg = msg.decode('utf-8')
         if msg:
             msg = web.decode(msg)  # msg.replace('&#39;', "'")
+            src = ja2jp(src)
+            dest = ja2jp(dest)
             msg = '"%s" (%s to %s, translate.google.com)' % (msg, src, dest)
         else:
             msg = 'The %s to %s translation failed, sorry!' % (src, dest)
