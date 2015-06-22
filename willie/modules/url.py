@@ -116,7 +116,7 @@ def title_command(bot, trigger):
         bot.reply('[ %s ] - %s' % (title, domain))
 
 
-#@rule('(?u).*(https?://\S+).*')
+@rule('(?u).*(https?://\S+).*')
 def title_auto(bot, trigger):
     """
     Automatically show titles for URLs. For shortened URLs/redirects, find
