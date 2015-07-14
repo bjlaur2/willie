@@ -122,7 +122,7 @@ def f_remind(bot, trigger):
         response = "%s will be notificated." % tellee
 
 #        bot.reply(response, 1)
-	bot.notice(response, Identifier(teller))
+        bot.notice(response, Identifier(teller))
     elif Identifier(teller) == tellee:
         bot.say('You can %s yourself that.' % verb)
     else:
