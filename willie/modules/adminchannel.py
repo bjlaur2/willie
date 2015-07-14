@@ -113,7 +113,7 @@ def kick(bot, trigger):
         channel = opt
         reasonidx = 3
     reason = ' '.join(text[reasonidx:])
-    if nick != bot.config.nick:
+    if nick != bot.config.core.nick:
         bot.write(['KICK', channel, nick, reason])
 
 
@@ -245,7 +245,7 @@ def unquiet(bot, trigger):
     quietmask = configureHostMask(quietmask)
     if quietmask == '':
         return
-    bot.write(['MODE', opt, '-q', quietmask])
+    bot.write(['MODE', channel, '-q', quietmask])
 
 
 @require_privilege(OP)

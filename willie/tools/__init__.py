@@ -2,9 +2,7 @@
 """
 *Availability: 3+*
 ``tools`` contains a number of useful miscellaneous tools and shortcuts for use
-in Willie modules. A number of things are moved into sub-modules like
-``tools.time`` in 5.3; they will be removed from ``tools`` itself in 6.0.
-"""
+in Willie modules."""
 
 # tools.py - Willie misc tools
 # Copyright 2008, Sean B. Palmer, inamidst.com
@@ -39,13 +37,14 @@ else:
 
 _channel_prefixes = ('#', '&', '+', '!')
 
-# 5.x compatibility
-from .calculation import (  # NOQA
-    ExpressionEvaluator, guarded_mul, pow_complexity, guarded_pow,
-    EquationEvaluator, eval_equation
-)
-from .time import get_timezone, format_time  # NOQA
-from .jobs import PriorityQueue, released  # NOQA
+
+def get_input(prompt):
+    """Get decoded input from the terminal (equivalent to python 3's ``input``).
+    """
+    if sys.version_info.major >= 3:
+        return input(prompt)
+    else:
+        return raw_input(prompt).decode('utf8')
 
 
 def get_raising_file_and_line(tb=None):
@@ -324,10 +323,6 @@ class WillieMemory(dict):
         """Backwards compatability with 3.x, use `in` operator instead."""
         return self.__contains__(key)
 
-    def unlock(self):
-        """Release the write lock."""
-        return self.lock.release()
-
 
 class WillieMemoryWithDefault(defaultdict):
     """Same as WillieMemory, but subclasses from collections.defaultdict."""
@@ -355,11 +350,3 @@ class WillieMemoryWithDefault(defaultdict):
     def contains(self, key):
         """Backwards compatability with 3.x, use `in` operator instead."""
         return self.__contains__(key)
-
-    def lock(self):
-        """Lock this instance from writes. Useful if you want to iterate."""
-        return self.lock.acquire()
-
-    def unlock(self):
-        """Release the write lock."""
-        return self.lock.release()

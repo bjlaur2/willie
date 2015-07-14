@@ -1,4 +1,4 @@
-# coding=utf8
+# coding=utf-8
 """This module has classes and functions that can help in writing tests.
 
 test_tools.py - Willie misc tools
@@ -9,15 +9,37 @@ https://willie.dftba.net
 """
 from __future__ import unicode_literals
 
-import sys
-import re
 import os
+import re
+import sys
+import tempfile
+
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 
 import willie.config
-import willie.bot
-import willie.irc
+import willie.config.core_section
 import willie.tools
 import willie.trigger
+
+
+class MockConfig(willie.config.Config):
+    def __init__(self):
+        self.filename = tempfile.mkstemp()[1]
+        #self._homedir = tempfile.mkdtemp()
+        #self.filename = os.path.join(self._homedir, 'test.cfg')
+        self.parser = ConfigParser.RawConfigParser(allow_no_value=True)
+        self.parser.add_section('core')
+        self.parser.set('core', 'owner', 'Embolalia')
+        self.define_section('core', willie.config.core_section.CoreSection)
+        self.get = self.parser.get
+
+    def define_section(self, name, cls_):
+        if not self.parser.has_section(name):
+            self.parser.add_section(name)
+        setattr(self, name, cls_(self, name))
 
 
 class MockWillie(object):
@@ -33,13 +55,13 @@ class MockWillie(object):
         self.halfplus = {}
         self.voices = {}
 
-        self.config = willie.config.Config('', load=False)
+        self.config = MockConfig()
         self._init_config()
 
         if admin:
-            self.config.admins = self.nick
+            self.config.core.admins = [self.nick]
         if owner:
-            self.config.owner = self.nick
+            self.config.core.owner = self.nick
 
     def _init_config(self):
         cfg = self.config

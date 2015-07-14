@@ -26,9 +26,8 @@ import argparse
 import signal
 
 from willie.__init__ import run, __version__
-from willie.config import Config, create_config, ConfigurationError, wizard
+from willie.config import Config, _create_config, ConfigurationError, _wizard
 import willie.tools as tools
-import willie.web
 
 homedir = os.path.join(os.path.expanduser('~'), '.willie')
 
@@ -69,10 +68,6 @@ def main(argv=None):
                             help="Gracefully quit Willie")
         parser.add_argument("-k", '--kill', action="store_true", dest="kill",
                             help="Kill Willie")
-        parser.add_argument('--exit-on-error', action="store_true",
-                            dest="exit_on_error", help=(
-                                "Exit immediately on every error instead of "
-                                "trying to recover"))
         parser.add_argument("-l", '--list', action="store_true",
                             dest="list_configs",
                             help="List all config files found")
@@ -111,10 +106,10 @@ def main(argv=None):
             print('http://willie.dftba.net/')
             return
         elif opts.wizard:
-            wizard('all', opts.config)
+            _wizard('all', opts.config)
             return
         elif opts.mod_wizard:
-            wizard('mod', opts.config)
+            _wizard('mod', opts.config)
             return
 
         if opts.list_configs:
@@ -135,7 +130,7 @@ def main(argv=None):
             print("Welcome to Willie!\nI can't seem to find the configuration file, so let's generate it!\n")
             if not configpath.endswith('.cfg'):
                 configpath = configpath + '.cfg'
-            create_config(configpath)
+            _create_config(configpath)
             configpath = find_config(config_name)
         try:
             config_module = Config(configpath)
@@ -148,27 +143,15 @@ def main(argv=None):
             # exit with code 2 to prevent auto restart on fail by systemd
             sys.exit(2)
 
-        if not config_module.has_option('core', 'homedir'):
-            config_module.dotdir = homedir
-            config_module.homedir = homedir
-        else:
-            homedir = config_module.core.homedir
-            config_module.dotdir = config_module.core.homedir
+        logfile = os.path.os.path.join(config_module.core.logdir, 'stdio.log')
 
-        if not config_module.core.logdir:
-            config_module.core.logdir = os.path.join(homedir, 'logs')
-        logfile = os.path.os.path.join(config_module.logdir, 'stdio.log')
-        if not os.path.isdir(config_module.logdir):
-            os.mkdir(config_module.logdir)
-
-        config_module.exit_on_error = opts.exit_on_error
         config_module._is_deamonized = opts.deamonize
 
         sys.stderr = tools.OutputRedirect(logfile, True, opts.quiet)
         sys.stdout = tools.OutputRedirect(logfile, False, opts.quiet)
 
         # Handle --quit, --kill and saving the PID to file
-        pid_dir = config_module.core.pid_dir or homedir
+        pid_dir = config_module.core.pid_dir
         if opts.config is None:
             pid_file_path = os.path.join(pid_dir, 'willie.pid')
         else:
@@ -211,10 +194,9 @@ def main(argv=None):
                 sys.exit()
         with open(pid_file_path, 'w') as pid_file:
             pid_file.write(str(os.getpid()))
-        config_module.pid_file_path = pid_file_path
 
         # Step Five: Initialise And Run willie
-        run(config_module)
+        run(config_module, pid_file_path)
     except KeyboardInterrupt:
         print("\n\nInterrupted")
         os._exit(1)

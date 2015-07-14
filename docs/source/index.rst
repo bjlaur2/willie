@@ -372,22 +372,30 @@ The ``Trigger`` class
 .. autoclass:: willie.trigger.Trigger
    :members:
 
-More advanced: ``db`` and ``config``
-====================================
-
-The ``willie`` object has, among others, the attributes ``db`` and
-``config``. These can be used for a number of functions and features.
-
-The ``WillieDB`` class
-----------------------
+Database functionality
+======================
 
 .. automodule:: willie.db
    :members:
 
-The ``Config`` class
---------------------
+Configuration functionality
+===========================
 
 .. automodule:: willie.config
+   :members:
+   :undoc-members:
+
+Static configuration sections
+-----------------------------
+
+.. automodule:: willie.config.types
+   :members:
+   :undoc-members:
+
+The [core] configuration section
+--------------------------------
+
+.. autoclass:: willie.config.core_section.CoreSection
    :members:
    :undoc-members:
 

@@ -1,4 +1,4 @@
-# coding=utf8
+# coding=utf-8
 """*Availability: 4.5+*
 
 The formatting module includes functions to apply IRC formatting to text."""
@@ -45,7 +45,7 @@ class colors:
     PINK = '13'
     LIGHT_PURPLE = PINK
     FUCHSIA = PINK
-    #TODO GREY and/or GRAY?
+    # Nobody has complained that this is grey not gray yet, so go with it?
     GREY = '14'
     LIGHT_GREY = '15'
     SILVER = LIGHT_GREY

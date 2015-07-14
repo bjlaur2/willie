@@ -1,4 +1,4 @@
-# coding=utf8
+# coding=utf-8
 """This module is meant to be imported from willie modules.
 
 It defines the following decorators for defining willie callables:
@@ -245,15 +245,6 @@ def intent(*intent_list):
     """Make a callable trigger on a message with any of the given intents.
 
     *Availability: 5.2.0+*
-
-    NOTE: Due to a bug, messages sent with the intent in the CTCP format
-    (rather than IRCv3 message tags) which do not include a message (for
-    example, a message like ``\\x01VERSION\\x01``) are not correctly parsed by
-    the bot, and as such do not get caught by this decorator. This erroneous
-    behavior is kept in 5.x for compatability, but will be rectified in 6.0.
-
-    Additionally in 5.x, a rule or command must be specified in addition to
-    this, even if it is just ``'.*``.
     """
     def add_attribute(function):
         if not hasattr(function, "intents"):
@@ -272,6 +263,9 @@ def rate(value):
     a function is given a rate of 20, a single user may only use that function
     once every 20 seconds. This limit applies to each user individually. Users
     on the admin list in Willie’s configuration are exempted from rate limits.
+
+    Rate-limited functions that use scheduled future commands should import
+    threading.Timer() instead of sched, or rate limiting will not work properly.
 
     """
     def add_attribute(function):
@@ -316,7 +310,7 @@ def require_chanmsg(message=None):
         def _nop(*args, **kwargs):
             # Assign trigger and bot for easy access later
             bot, trigger = args[0:2]
-            if trigger.is_privmsg:
+            if not trigger.is_privmsg:
                 return function(*args, **kwargs)
             else:
                 if message and not callable(message):

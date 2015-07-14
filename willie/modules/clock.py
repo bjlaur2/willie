@@ -15,14 +15,38 @@ except ImportError:
     pytz = None
 
 from willie.module import commands, example, OP
-from willie.tools.time import get_timezone, format_time
+from willie.tools.time import (
+    get_timezone, format_time, validate_format, validate_timezone
+)
+from willie.config.types import StaticSection, ValidatedAttribute
+
+
+class TimeSection(StaticSection):
+    tz = ValidatedAttribute(
+        'tz',
+        parse=validate_timezone,
+        serialize=validate_timezone,
+        default='UTC'
+    )
+    """Default time zone (see http://dft.ba/-tz)"""
+    time_format = ValidatedAttribute(
+        'time_format',
+        parse=validate_format,
+        default='%Y-%m-%d - %T%Z'
+    )
+    """Default time format (see http://strftime.net)"""
 
 
 def configure(config):
-    config.interactive_add('clock', 'tz',
-                           'Preferred time zone (http://dft.ba/-tz)', 'UTC')
-    config.interactive_add('clock', 'time_format',
-                           'Preferred time format (http://strftime.net)', '%F - %T%Z')
+    config.define_section('clock', TimeSection)
+    config.clock.configure_setting(
+        'tz', 'Preferred time zone (http://dft.ba/-tz)')
+    config.clock.configure_setting(
+        'time_format', 'Preferred time format (http://strftime.net)')
+
+
+def setup(bot):
+    bot.config.define_section('clock', TimeSection)
 
 
 @commands('t', 'time')
@@ -92,7 +116,7 @@ def get_user_tz(bot, trigger):
 
 
 @commands('settimeformat', 'settf')
-@example('.settf %FT%T%z')
+@example('.settf %Y-%m-%dT%T%z')
 def update_user_format(bot, trigger):
     """
     Sets your preferred format for time. Uses the standard strftime format. You
@@ -200,7 +224,7 @@ def get_channel_tz(bot, trigger):
 
 
 @commands('setchanneltimeformat', 'setctf')
-@example('.setctf %FT%T%z')
+@example('.setctf %Y-%m-%dT%T%z')
 def update_channel_format(bot, trigger):
     """
     Sets your preferred format for time. Uses the standard strftime format. You

@@ -1,4 +1,4 @@
-# coding=utf8
+# coding=utf-8
 """
 coretasks.py - Willie Routine Core tasks
 Copyright 2008-2011, Sean B. Palmer (inamidst.com) and Michael Yanovich
@@ -20,6 +20,7 @@ import re
 import sys
 import time
 import willie
+import willie.module
 from willie.tools import Identifier, iteritems
 import base64
 from willie.logger import get_logger
@@ -32,16 +33,16 @@ LOGGER = get_logger(__name__)
 
 def auth_after_register(bot):
     """Do NickServ/AuthServ auth"""
-    if bot.config.core.auth_method == 'nickserv' or bot.config.core.nickserv_password:
-        nickserv_name = bot.config.core.auth_target or bot.config.core.nickserv_name or 'NickServ'
+    if bot.config.core.auth_method == 'nickserv':
+        nickserv_name = bot.config.core.auth_target or 'NickServ'
         bot.msg(
             nickserv_name,
-            'IDENTIFY %s' % bot.config.core.nickserv_password
+            'IDENTIFY %s' % bot.config.core.auth_password
         )
 
-    elif bot.config.core.auth_method == 'authserv' or bot.config.core.authserv_password:
-        account = bot.config.core.auth_username or bot.config.core.authserv_account
-        password = bot.config.core.auth_password or bot.config.core.authserv_password
+    elif bot.config.core.auth_method == 'authserv':
+        account = bot.config.core.auth_username
+        password = bot.config.core.auth_password
         bot.write((
             'AUTHSERV auth',
             account + ' ' + password
@@ -70,25 +71,21 @@ def startup(bot, trigger):
 
     auth_after_register(bot)
 
-    #Set bot modes per config, +B if no config option is defined
-    if bot.config.has_option('core', 'modes'):
-        modes = bot.config.core.modes
-    else:
-        modes = 'B'
+    modes = bot.config.core.modes
     bot.write(('MODE ', '%s +%s' % (bot.nick, modes)))
 
     bot.memory['retry_join'] = dict()
 
-    if bot.config.has_option('core', 'throttle_join'):
+    if bot.config.core.throttle_join:
         throttle_rate = int(bot.config.core.throttle_join)
         channels_joined = 0
-        for channel in bot.config.core.get_list('channels'):
+        for channel in bot.config.core.channels:
             channels_joined += 1
             if not channels_joined % throttle_rate:
                 time.sleep(1)
             bot.join(channel)
     else:
-        for channel in bot.config.core.get_list('channels'):
+        for channel in bot.config.core.channels:
             bot.join(channel)
 
 
@@ -384,7 +381,7 @@ def recieve_cap_ls_reply(bot, trigger):
 
     # If we want to do SASL, we have to wait before we can send CAP END. So if
     # we are, wait on 903 (SASL successful) to send it.
-    if bot.config.core.auth_method == 'sasl' or bot.config.core.sasl_password:
+    if bot.config.core.auth_method == 'sasl':
         bot.write(('CAP', 'REQ', 'sasl'))
     else:
         bot.write(('CAP', 'END'))
@@ -393,10 +390,10 @@ def recieve_cap_ls_reply(bot, trigger):
 def recieve_cap_ack_sasl(bot):
     # Presumably we're only here if we said we actually *want* sasl, but still
     # check anyway.
-    password = bot.config.core.auth_password or bot.config.core.sasl_password
+    password = bot.config.core.auth_password
     if not password:
         return
-    mech = bot.config.core.sasl_mechanism or 'PLAIN'
+    mech = bot.config.core.auth_target or 'PLAIN'
     bot.write(('AUTHENTICATE', mech))
 
 
@@ -407,9 +404,9 @@ def auth_proceed(bot, trigger):
         # How did we get here? I am not good with computer.
         return
     # Is this right?
-    sasl_username = bot.config.core.auth_username or bot.config.core.sasl_username or bot.nick
-    sasl_token = '\0'.join((sasl_username, sasl_username,
-                           bot.config.core.sasl_password))
+    sasl_username = bot.config.core.auth_username or bot.nick
+    sasl_password = bot.config.core.auth_password
+    sasl_token = '\0'.join((sasl_username, sasl_username, sasl_password))
     # Spec says we do a base 64 encode on the SASL stuff
     bot.write(('AUTHENTICATE', base64.b64encode(sasl_token.encode('utf-8'))))
 
@@ -447,9 +444,9 @@ def blocks(bot, trigger):
         'huh': "I could not figure out what you wanted to do.",
     }
 
-    masks = set(s for s in bot.config.core.get_list('host_blocks') if s != '')
+    masks = set(s for s in bot.config.core.host_blocks if s != '')
     nicks = set(Identifier(nick)
-                for nick in bot.config.core.get_list('nick_blocks')
+                for nick in bot.config.core.nick_blocks
                 if nick != '')
     text = trigger.group().split()
 
